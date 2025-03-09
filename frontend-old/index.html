@@ -1,0 +1,322 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Artist Search</title>
+    <style>
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 70px;
+        background-color: #EFEFEF;
+        display: flex;
+        align-items: center;
+        z-index: 1;
+      }
+      header h1 {
+        font-family: Arial, sans-serif;
+        padding-left: 10px;
+        font-weight: lighter;
+      }
+      main {
+        width: 100%;
+        display: block;
+        margin: 0 auto;
+        margin-bottom: 60px;
+      }
+      .searchField {
+        position: relative;
+        margin: 120px auto 0;
+        margin-top: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40%;
+
+      }
+      .search_button {
+        background: transparent; 
+        border: none;
+        padding: 0; 
+        bottom: 8px;
+        position: absolute;
+        left: 15px;
+      }
+      .search_icon {
+        height: 25px;
+        opacity: 0.5;
+        cursor: pointer;
+      }
+      .search_icon:hover {
+        opacity: 1;
+      }
+      .clear_icon {
+        position: absolute;
+        height: 20px;
+        opacity: 0.5;
+        right: 15px;
+      }
+      .clear_icon:hover {
+        opacity: 1;
+      }
+      .search-text {
+        font-family: Arial, sans-serif;
+        font-size: 15px;
+        background: transparent;
+        border-radius: 20px;
+        height: 40px;
+        width: 100%;
+        text-indent: 45px;
+        border: 2px solid #ccc;
+        outline: none;
+      }
+      input[type=text]:focus {
+        border: 2px solid #F5722A;
+      }
+
+      .cardRow{
+        margin:auto;
+        margin-top: 40px;
+        display: flex;
+        overflow-x: auto;
+        width: 80%;
+        padding-bottom: 4px;
+      }
+      .cardRow::-webkit-scrollbar {
+        height: 8px;
+      }
+
+      .cardRow::-webkit-scrollbar-thumb {
+        background: rgb(150, 150, 150); 
+        border-radius: 8px;
+      }
+      .cardRow::-webkit-scrollbar-thumb:hover{
+        background: rgb(97, 97, 97); 
+      }
+
+
+      .cardColumn{
+        flex: 0 0 auto;
+        margin-right: 10px;
+      }
+      .card{
+        font-family: Arial, sans-serif;
+        font-size: 20px;
+        width: 230px;
+        height: auto;
+        text-align: center;
+        color: white;
+        background-color: #205375;
+        word-wrap: break-word;
+        white-space: normal;
+      }
+      .card:hover{
+        background-color: #112B3C !important;;
+      }
+      .card p {
+        padding-bottom: 10px;
+      }
+      .card-image{
+        margin-top: 20px;
+        border-radius: 50%;
+        height: 200px;
+        border: 6px solid white;
+      }
+
+      .loading{
+        display: flex;
+        justify-content: center;
+      }
+      .loading-icon{
+        height: 80px;
+        display: none;
+      }
+
+      .no-result{
+        font-family: Arial, sans-serif;
+        font-size: 15px;
+        border-radius: 20px;
+        background-color: rgb(201, 201, 201);
+        width: 45%;
+        height: 50px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        margin: auto;
+      }
+      .artist{
+        width: 80%;
+        margin: auto;
+        text-align: center;
+      }
+      .artist h1{
+        font-family: Arial, sans-serif;
+        font-weight: lighter;
+      }
+      .artist h2{
+        font-family: Arial, sans-serif;
+        font-weight: lighter;
+        margin-top: -20px;
+      }
+      .artist p{
+        font-family: Arial, sans-serif;
+        font-size: 20px;
+        text-align: justify;
+        margin-top: -15px;
+      }
+      footer {
+        font-family: Arial, sans-serif;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+        text-align: center;
+        background-color: #112B3C;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      footer a {
+        color: white;
+        text-decoration: none;
+      }
+      .artsy_logo {
+        height: 20px;
+      }
+    </style>
+    <script>
+      async function clickSearch(){
+        const artist = document.querySelector(".artist");
+        artist.innerHTML = "";
+        document.getElementById("no-result").style.display = "none";
+        document.getElementById("loading").style.display = "block";
+        searchContent = document.getElementById("search-text").value.trim();
+        let url = `http://127.0.0.1:8080/search/${encodeURIComponent(searchContent)}`;
+        let searchResults = null;
+        try {
+          const response = await fetch(url, { method: "GET" });
+
+          responseJson = await response.json();
+          searchResults = responseJson.results;
+          console.log("Stored Response:", searchResults);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+        document.getElementById("loading").style.display = "none";
+        const cardRow = document.querySelector(".cardRow");
+        cardRow.innerHTML = "";
+        if (searchResults != null){
+          searchResults.forEach(element => {
+            const cardColumnDiv = document.createElement("div");
+            const cardDiv = document.createElement("div");
+            const img = document.createElement("img");
+            const p = document.createElement("p");
+
+            cardColumnDiv.className = "cardColumn"
+            cardDiv.className = "card";
+            img.className = "card-image"
+            
+            if (element.image == "/assets/shared/missing_image.png"){
+              element.image = "images/artsy_logo.svg"
+            }
+            img.src = element.image
+            p.textContent = element.title
+            cardDiv.id = element.link
+            cardDiv.onclick = function() {clickCard(cardDiv.id)};
+
+            cardDiv.appendChild(img);
+            cardDiv.appendChild(p);
+            cardColumnDiv.appendChild(cardDiv);
+            cardRow.appendChild(cardColumnDiv);
+          });
+          if (searchResults.length == 0){
+            document.getElementById("no-result").style.display = "flex";
+          } 
+          else {
+            let cards = document.querySelectorAll(".card"); 
+            let max = 0;
+            cards.forEach(card => {
+              if (card.offsetHeight > max) {
+                max = card.offsetHeight;
+              }
+            });
+            cards.forEach(card => {
+              card.style.height = `${max}px`;
+            });
+            cardRow.style.justifyContent = cardRow.scrollWidth > cardRow.clientWidth ? "" : "center";
+          }
+        }
+      }
+      function clickDelete(){
+        document.getElementById("search-text").value = "";
+      }
+      async function clickCard(id){
+        if(document.getElementById("loading").style.display == "block") return;
+        document.querySelectorAll(".card").forEach(card => {card.style.backgroundColor = "#205375";});
+        document.getElementById(id).style.backgroundColor = "#112B3C";
+        const artist = document.querySelector(".artist");
+        artist.innerHTML = "";
+        document.getElementById("loading").style.display = "block";
+        searchContent = document.getElementById("search-text").value.trim();
+        let url = `http://127.0.0.1:8080/artists/${id}`;
+        console.log(id)
+        let searchResults = null;
+        try {
+          const response = await fetch(url, { method: "GET" });
+
+          searchResults = await response.json();
+          console.log("Stored Response:", searchResults);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+        document.getElementById("loading").style.display = "none";
+        const h1 = document.createElement("h1");
+        const h2 = document.createElement("h2");
+        const p = document.createElement("p");
+        
+        h1.textContent = searchResults.name+" ("+searchResults.birthday+" - "+searchResults.deathday+")";
+        artist.appendChild(h1);
+        if (searchResults.nationality){
+          h2.textContent = searchResults.nationality;
+          artist.appendChild(h2);
+        }
+        if (searchResults.biography){
+          p.textContent = searchResults.biography;
+          artist.appendChild(p);
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header>
+      <h1>Artist Search</h1>
+    </header>
+    <main>
+      <form onsubmit="clickSearch(); return false;">
+        <div class="searchField">
+          <button type="submit" class="search_button">
+            <img src="images/search_icon.png" class="search_icon">
+          </button>
+          <input class="search-text" type="text" id="search-text" placeholder="Please enter an artist name." autocomplete="off" required>
+          <img src="images/clear_icon.png" class="clear_icon" onclick="clickDelete()">
+          <div id="results"></div>
+        </div>
+      </form>
+      <div class="cardRow"></div>
+      <div class="artist"></div>
+      <div class="loading"><img src="images/loading.gif" class="loading-icon" id="loading"></div>
+      <div class="no-result" id="no-result">
+        <p>No results found.</p>
+      </div>
+      </main>
+    <footer>
+      <a href="https://www.artsy.net/">Powered by 
+        <img src="images/artsy_logo.svg" class="artsy_logo"> 
+        Artsy.
+      </a>
+    </footer>
+  </body>
+</html>
