@@ -1,0 +1,31 @@
+<div class="main-container mx-auto mt-4">
+    <div *ngIf="favorites.length === 0" class="alert alert-danger mb-3 text-center">
+        No favorite artists.
+    </div>
+
+    <div *ngIf="favorites.length > 0" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div *ngFor="let favorite of favorites" class="col">
+            <div class="position-relative h-100 rounded overflow-hidden">
+                <div class="favoriteBackground"
+                    [style.backgroundImage]="'url(' + (favorite.image.includes('missing_image.png') || !favorite.image ? 'assets/images/artsy_logo.svg' : favorite.image) + ')'">
+                </div>
+
+                <div class="position-relative text-white h-100 d-flex flex-column justify-content-between p-3"
+                    (click)="viewArtist(favorite.id)" style="z-index: 1;  cursor: pointer;">
+                    <h5 class="mb-2">{{ favorite.name }}</h5>
+                    <div class="lh-sm">
+                        <div>{{ favorite.birthday }} - {{ favorite.deathday || 'Present' }}</div>
+                        <div>{{ favorite.nationality }}</div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-end mt-2">
+                        <p class="small mb-0">{{ getRelativeTime(favorite.time) }}</p>
+                        <button class="btn btn-link text-white text-decoration-underline p-0"
+                            (click)="removeFavorite($event, favorite.id)">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

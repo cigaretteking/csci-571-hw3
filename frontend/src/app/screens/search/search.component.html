@@ -1,0 +1,184 @@
+<div class="main-container mx-auto mt-4">
+    <form (ngSubmit)="search()">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Please enter an artist name."
+                [(ngModel)]="searchContent" (focus)="isInputFocused = true" (blur)="isInputFocused = false"
+                name="searchInput" required />
+
+            <button class="btn btn-primary active" type="submit" [disabled]="!searchContent">
+                Search
+                <div *ngIf="isLoading" class="spinner-border spinner-border-sm text-light" role="status"
+                    style="width: 1rem; height: 1rem; border-width: 0.12em;">
+                </div>
+            </button>
+
+            <button class="btn btn-secondary" type="button" (click)="clear()">
+                Clear
+            </button>
+        </div>
+    </form>
+
+    <div class="card-wrapper mt-4 mx-auto">
+        <div class="d-flex gap-3 pb-1 align-items-start">
+            <div *ngFor="let result of searchResults" class="card flex-shrink-0 text-white"
+                (mouseenter)="hoveredCard = result.link" (mouseleave)="hoveredCard = null"
+                (click)="selectArtist(result.link)" style="width: 14rem; cursor: pointer;">
+                <button *ngIf="!isNotLogin"
+                    class="btn btn-primary btn-sm rounded-circle position-absolute top-0 end-0 mt-2 me-2 d-flex align-items-center justify-content-center"
+                    (click)="modifyFavorite($event, result)" style="width: 38px; height: 38px;">
+                    <i class="bi" [ngClass]="{
+          'bi-star-fill text-warning': isFavorite(result.link),
+          'bi-star text-white': !isFavorite(result.link)
+        }" style="font-size: 1.4rem;"></i>
+                </button>
+                <img [src]="result.image.includes('missing_image.png') ? 'assets/images/artsy_logo.svg' : result.image"
+                    class="card-img-top" alt="Artist image" style="object-fit: cover; height: 220px;" />
+                <div class="card-footer py-3"
+                    [style.backgroundColor]="selectedCard === result.link || hoveredCard === result.link ? '#02478E' : '#112B3C'">
+                    <h5 class="mb-0">{{ result.title }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="noResult && searched" class="alert alert-danger" style="margin: auto">
+        No results.
+    </div>
+    <div *ngIf="selectedCard" class="mt-4 d-flex justify-content-center">
+        <ul class="nav nav-pills" style="width: 100%;">
+            <li class="nav-item w-50">
+                <button class="nav-link w-100"
+                    [ngStyle]="selectedTab === 'info' ? { 'background-color': '#0a58ca', color: 'white' } : {}"
+                    [ngClass]="{ 'btn': selectedTab === 'info', 'btn-link text-decoration-none': selectedTab !== 'info' }"
+                    (click)="selectedTab = 'info'">
+                    Artist Info
+                </button>
+            </li>
+            <li class="nav-item w-50">
+                <button class="nav-link w-100"
+                    [ngStyle]="selectedTab === 'artworks' ? { 'background-color': '#0a58ca', color: 'white' } : {}"
+                    [ngClass]="{ 'btn': selectedTab === 'artworks', 'btn-link text-decoration-none': selectedTab !== 'artworks' }"
+                    (click)="selectedTab = 'artworks'">
+                    Artworks
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div *ngIf="selectedCard" style="margin: auto;">
+        <div *ngIf="selectedTab === 'info'" class="artist mt-4" style="margin: auto; text-align: center;">
+            <div *ngIf="isInfoLoading" class="d-flex justify-content-center">
+                <div class="spinner-border text-primary" style="width: 2.8rem; height: 2.8rem; border-width: 0.2em;">
+                </div>
+            </div>
+            <ng-container *ngIf="!isInfoLoading">
+                <h3 style="line-height: 0.5;">{{ artistInfo.name }}
+                    <button *ngIf="!isNotLogin" class="btn btn-link p-0 mb-2 ms-0"
+                        (click)="modifyFavorite($event, { link: selectedCard })" style="line-height: 0;">
+                        <i *ngIf="!isNotLogin" class="bi" [ngClass]="{
+              'bi-star-fill text-warning': isFavorite(selectedCard),
+              'bi-star text-black': !isFavorite(selectedCard)
+            }" style="font-size: 1.4rem;"></i></button>
+                </h3>
+
+                <p style="line-height: 0.5;">
+                    {{ artistInfo.nationality }},
+                    <span>{{ artistInfo.birthday }}</span> -
+                    <span>{{ artistInfo.deathday }}</span>
+                </p>
+
+                <p style=" text-align: justify;  white-space: pre-line;">
+                    {{ artistInfo.biography }}
+                </p>
+            </ng-container>
+        </div>
+        <div *ngIf="selectedTab === 'artworks'">
+            <div *ngIf="isArtworksLoading" class="d-flex justify-content-center mt-4">
+                <div class="spinner-border text-primary" style="width: 2.8rem; height: 2.8rem; border-width: 0.2em;">
+                </div>
+            </div>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 mt-4 g-4">
+                <div *ngFor="let artwork of artworks" class="col">
+                    <div class="card">
+                        <img [src]="artwork.image" class="card-img-top" alt="Artwork Image"
+                            style="object-fit: cover; width: 100%;" />
+
+                        <div class="card-body py-3">
+                            <div class="text-center">
+                                <span>{{ artwork.title }}</span>, <span class="text-muted">{{ artwork.date }}</span>
+                            </div>
+                        </div>
+
+                        <div class="card-footer text-center category-footer" style="border-top: none;"
+                            [ngClass]="{ 'selected': selectedArtwork?.id === artwork.id }" (click)="openModal(artwork)">
+                            View categories
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div *ngIf="!isArtworksLoading && selectedTab === 'artworks' && noArtworksResult"
+            class="alert alert-danger mb-3" style="margin: auto">
+            No artworks.
+        </div>
+    </div>
+    <h3 *ngIf="!isNotLogin && selectedCard && similarArtists.length !== 0">Similar Artists</h3>
+    <div *ngIf="!isNotLogin" class="card-wrapper mt-0 mx-auto">
+        <div class="d-flex gap-3 pb-1 align-items-start">
+            <div *ngFor="let result of similarArtists" class="card flex-shrink-0 text-white"
+                (mouseenter)="hoveredCard = result.link" (mouseleave)="hoveredCard = null"
+                (click)="selectArtist(result.link)" style="width: 14rem; cursor: pointer;">
+                <button *ngIf="!isNotLogin"
+                    class="btn btn-primary btn-sm rounded-circle position-absolute top-0 end-0 mt-2 me-2 d-flex align-items-center justify-content-center"
+                    (click)="modifyFavorite($event, result)" style="width: 38px; height: 38px;">
+                    <i class="bi" [ngClass]="{
+          'bi-star-fill text-warning': isFavorite(result.link),
+          'bi-star text-white': !isFavorite(result.link)
+        }" style="font-size: 1.4rem;"></i>
+                </button>
+                <img [src]="result.image.includes('missing_image.png') ? 'assets/images/artsy_logo.svg' : result.image"
+                    class="card-img-top" alt="Artist image" style="object-fit: cover; height: 220px;" />
+                <div class="card-footer py-3"
+                    [style.backgroundColor]="selectedCard === result.link || hoveredCard === result.link ? '#02478E' : '#112B3C'">
+                    <h5 class="mb-0">{{ result.title }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" id="categoryModal" #categoryModal>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex align-items-center w-100">
+                    <img [src]="selectedArtwork?.image" alt="Artwork Image" style="height: 50px;" />
+
+                    <div class="d-flex flex-column justify-content-center ms-2" style="height: 60px;">
+                        <p class="modal-title mt-3">{{ selectedArtwork?.title }}</p>
+                        <p>{{ selectedArtwork?.date }}</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div *ngIf="isGenesLoading" class="d-flex justify-content-center my-4">
+                    <div class="spinner-border text-primary" role="status"
+                        style="width: 2.8rem; height: 2.8rem; border-width: 0.2em;"></div>
+                </div>
+                <p *ngIf="!isGenesLoading && genes.length === 0" class="text-danger">No genes.</p>
+                <div *ngIf="!isGenesLoading && genes.length > 0"
+                    class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    <div *ngFor="let gene of genes" class="col">
+                        <div class="card">
+                            <img [src]="gene.image" class="card-img-top" style="object-fit: cover; height: 240px;"
+                                alt="Gene Image">
+                            <div class="card-body text-center">
+                                {{ gene.name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

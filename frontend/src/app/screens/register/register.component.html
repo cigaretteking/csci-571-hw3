@@ -1,0 +1,50 @@
+<div class="container mt-5" style="max-width: 450px;">
+    <div class="border border-2 rounded p-4">
+        <h1 class="display-5 mb-5 fw-normal">Register</h1>
+        <form #registerForm="ngForm" (ngSubmit)="register(registerForm)" novalidate>
+            <div class="mb-3">
+                <label for="fullname" class="form-label mb-0">Fullname</label>
+                <input type="text" id="fullname" name="fullname" [(ngModel)]="fullname" #fullnameRef="ngModel" placeholder="John Doe"
+                    class="form-control" required
+                    [ngClass]="{'is-invalid': fullnameRef.invalid && (fullnameRef.touched || fullnameRef.dirty)}" />
+                <div *ngIf="fullnameRef.errors?.['required'] && (fullnameRef.touched || fullnameRef.dirty)"
+                    class="text-danger mt-0">
+                    Fullname is required.
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label mb-1">Email address</label>
+                <input type="email" id="email" name="email" [(ngModel)]="email" #emailRef="ngModel" class="form-control" placeholder="Enter email"
+                    required pattern="^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$"
+                    [ngClass]="{'is-invalid': (emailRef.invalid && (emailRef.touched || emailRef.dirty)) || errors}" (input)="clear()" />
+                <div *ngIf="(emailRef.errors?.['pattern'] || emailRef.errors?.['required']) && (emailRef.touched || emailRef.dirty)"
+                    class="text-danger mt-0">
+                    Email must be valid.
+                </div>
+                <div *ngIf="errors" class="text-danger mt-0">
+                    {{ errors }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label mb-0">Password</label>
+                <input type="password" id="password" name="password" [(ngModel)]="password" #passwordRef="ngModel" placeholder="Password"
+                    class="form-control" required/>
+                <div *ngIf="passwordRef.errors?.['required'] && (passwordRef.touched || passwordRef.dirty)"
+                    class="text-danger mt-0">
+                    Password is required.
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" [disabled]="registerForm.invalid">
+                Register
+            </button>
+        </form>
+
+    </div>
+    <div class="text-center mt-3">
+        Already have an account?
+        <a href="#" (click)="toLogin()">Login</a>
+    </div>
+</div>
